@@ -1,7 +1,7 @@
 /**
  * Interface for generating patient health data.
- * Implementation simulates blood levels, blood pressure, blood saturation and ECG.
- * Uses different output strategies (for example console output).
+ * Implementation simulates for example: blood levels, blood pressure, blood saturation and ECG.
+ * Uses different output strategies (console output, etc.).
  *
  */
 package com.cardio_generator.generators;
