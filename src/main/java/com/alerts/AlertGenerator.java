@@ -141,7 +141,8 @@ public class AlertGenerator {
 
             if(record.getMeasurementValue() < 92.0) {
                 triggerAlert = true;
-            }// in csv files saturation levels saved as strings
+            }
+
         return triggerAlert;
     }
 
