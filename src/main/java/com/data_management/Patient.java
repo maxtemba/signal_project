@@ -62,4 +62,11 @@ public class Patient {
         return filteredRecords;
     }
 
+    //todo javadoc
+    @Override
+    public String toString() {
+        return "Patient{" +
+                "id=" + patientId +
+                '}';
+    }
 }
