@@ -1,5 +1,6 @@
 package com.data_management;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +20,7 @@ public class DataStorage {
      * Constructs a new instance of DataStorage, initializing the underlying storage
      * structure.
      */
-    public DataStorage(MockDataReader mockDataReader) {
+    public DataStorage(DataReader dataReader) {
         this.patientMap = new HashMap<>();
     }
 
@@ -82,17 +83,17 @@ public class DataStorage {
      * 
      * @param args command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // DataReader is not defined in this scope, should be initialized appropriately.
-        // DataReader reader = new SomeDataReaderImplementation("path/to/data");
-        DataStorage storage = new DataStorage(new MockDataReader());
+        DataReader reader = new FileDataReader("output");
+        DataStorage storage = new DataStorage(reader);
 
         // Assuming the reader has been properly initialized and can read data into the
         // storage
-        // reader.readData(storage);
+        reader.readData(storage);
 
         // Example of using DataStorage to retrieve and print records for a patient
-        List<PatientRecord> records = storage.getRecords(1, 1700000000000L, 1800000000000L);
+        List<PatientRecord> records = storage.getRecords(23, 1700000000000L, 1800000000000L);
         for (PatientRecord record : records) {
             System.out.println("Record for Patient ID: " + record.getPatientId() +
                     ", Type: " + record.getRecordType() +

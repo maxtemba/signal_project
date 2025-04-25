@@ -58,7 +58,20 @@ public class FileDataReader implements DataReader {
             int patientId = Integer.parseInt(parts[0].split(": ")[1]);
             long timestamp = Long.parseLong(parts[1].split(": ")[1]);
             String recordType = parts[2].split(": ")[1];
-            double measurementValue = Double.parseDouble(parts[3].split(": ")[1]);
+            String valueStr = parts[3].split(": ")[1].trim();
+
+            double measurementValue;
+            String cleanedValue = valueStr.replace("%", "").toLowerCase(); // remove % and convert to lowercase
+
+            // handle special cases "triggered" to 1.0 resolved to 0.0
+            if (cleanedValue.equals("triggered")) {
+                measurementValue = 1.0;
+            } else if (cleanedValue.equals("resolved")) {
+                measurementValue = 0.0;
+            } else {
+                // default doubleparsedouble
+                measurementValue = Double.parseDouble(cleanedValue);
+            }
 
             dataStorage.addPatientData(patientId, measurementValue, recordType, timestamp);
         } catch (Exception e) {
