@@ -1,5 +1,6 @@
 package com.alerts;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.data_management.DataStorage;
@@ -41,63 +42,131 @@ public class AlertGenerator {
         List<PatientRecord> records = patient.getRecords(1700000000000L, 1800000000000L);
         
         for (int i = 0; i < records.size() - 1; i++) {
-            
             PatientRecord record = records.get(i);
-            double current = record.getMeasurementValue();
-            
 
-            if(record.getRecordType().equals("SystolicPressure") && (current > 180 || current < 90)) {
-                Alert bpAlert = new Alert(String.valueOf(record.getPatientId()), "Systolic Pressure Reached Critical Threshold Alert", record.getTimestamp()); // could implement another method for triggering generation of bpalerts
-                triggerAlert(bpAlert);
-            }
-            if(record.getRecordType().equals("DiastolicPressure") && (current > 120 || current < 60)) {
-                Alert bpAlert = new Alert(String.valueOf(record.getPatientId()), "Diastolic Pressure Reached Critical Threshold Alert", record.getTimestamp());
-                triggerAlert(bpAlert);
-            }
-
-            if(i > 0 && i < records.size() - 1){
-
-                double prev = records.get(i - 1).getMeasurementValue();
-                double next = records.get(i + 1).getMeasurementValue();
-
-                if(record.getRecordType().equals("SystolicPressure") || record.getRecordType().equals("DiastolicPressure")) {
-           
-                   if(((current - prev) > 10 && (next - current) > 10) || ((current - prev) < -10 && (next - current) < -10)) {
-                    Alert bpAlert = new Alert(String.valueOf(record.getPatientId()), "Blood Pressure Variation Alert", record.getTimestamp());
-                    triggerAlert(bpAlert);
-                    }
-                }
-
-                if(record.getRecordType().equals("Saturation")) {
-
-                }
-            } // fixing 
-
-            if(record.getRecordType().equals("ECG")) {
-                int windowSize = 5;
-                double thresholdMultiplier = 1.5;
-
-                if(i >= windowSize) {
-                    double sum = 0;
-                    for(int j = i - windowSize; j < i; j++) {
-                        sum += records.get(j).getMeasurementValue();
-                    }
-                    double average = sum / windowSize;
-
-                    if(current > average * thresholdMultiplier) {
-                        Alert ecgAlert = new Alert(String.valueOf(record.getPatientId()), "ECG Alert", record.getTimestamp());
-                        triggerAlert(ecgAlert);
-                    }
+            if (record.getRecordType().equals("SystolicPressure") || record.getRecordType().equals("DiastolicPressure")) {
+                if (evaluateBloodPressure(record)) {
+                    triggerAlert(new Alert(String.valueOf(record.getPatientId()), "Blood Pressure Alert", record.getTimestamp()));
                 }
             }
-            
-            if(record.getRecordType().equals("Saturation")) {
-                if(current < 92.0) {
-                    Alert satuAlert = new Alert(String.valueOf(record.getPatientId()), "Low Saturation Alert", record.getTimestamp());
-                    triggerAlert(satuAlert);
-                } // in csv files saturation levels saved as strings 
+
+            if (record.getRecordType().equals("ECG")) {
+                if (evaluateECG(record)) {
+                    triggerAlert(new Alert(String.valueOf(record.getPatientId()), "ECG Alert", record.getTimestamp()));
+                }
+            }
+
+            if (record.getRecordType().equals("Saturation")) {
+                if (evaluateSaturation(record)) {
+                    triggerAlert(new Alert(String.valueOf(record.getPatientId()), "Saturation Alert", record.getTimestamp()));
+                }
+            }
+
+            if (record.getRecordType().equals("SystolicPressure") || record.getRecordType().equals("Saturation")) {
+                if(evaluateHypotensiveHypoxemia(record)) {
+                    triggerAlert(new Alert(String.valueOf(record.getPatientId()), "Hypotensive Hypoxemia Alert", record.getTimestamp()));
+                }
             }
         }
+    }
+
+    private boolean evaluateECG(PatientRecord record) {
+        int windowSize = 5;
+        double thresholdMultiplier = 1.5;
+        List<PatientRecord> ecgRecords = new ArrayList<>();
+        ecgRecords.add(record);
+        boolean triggerAlert = false;
+
+        if(ecgRecords.size() >= windowSize) {
+            double sum = 0;
+            for(int j = ecgRecords.size() - windowSize; j < ecgRecords.size(); j++) {
+                sum += ecgRecords.get(j).getMeasurementValue();
+            }
+            double average = sum / windowSize;
+
+            if(record.getMeasurementValue() > average * thresholdMultiplier) {
+                triggerAlert = true;
+            }
+        }
+        return triggerAlert;
+    }
+
+    private boolean evaluateBloodPressure(PatientRecord record) {
+        boolean triggerAlert = false;
+
+            double currentValue = record.getMeasurementValue();
+            List<PatientRecord> systolicRecords = new ArrayList<>();
+            List<PatientRecord> diastolicRecords = new ArrayList<>();
+
+            if(record.getRecordType().equals("SystolicPressure")) {
+                systolicRecords.add(record);
+                if((currentValue > 180 || currentValue < 90)) {
+                    triggerAlert = true;
+                }
+            }
+            if(record.getRecordType().equals("DiastolicPressure")) {
+                diastolicRecords.add(record);
+                if((currentValue > 120 || currentValue < 60)) {
+                    triggerAlert = true;
+                }
+            }
+
+            if(systolicRecords.size() >= 2) {
+
+                PatientRecord prev2Record = systolicRecords.get(systolicRecords.size() - 2);
+                PatientRecord prev1Record = systolicRecords.get(systolicRecords.size() - 1);
+                double prev2Value = prev2Record.getMeasurementValue();
+                double prev1Value = prev1Record.getMeasurementValue();
+
+                if (((currentValue - prev1Value) > 10 && (prev1Value - prev2Value) > 10) || ((currentValue - prev1Value) < -10 && (prev1Value - prev2Value) < -10)) {
+                    triggerAlert = true;
+                }
+            }
+            if(diastolicRecords.size() >= 2) {
+
+                PatientRecord prev2Record = systolicRecords.get(diastolicRecords.size() - 2);
+                PatientRecord prev1Record = systolicRecords.get(diastolicRecords.size() - 1);
+                double prev2Value = prev2Record.getMeasurementValue();
+                double prev1Value = prev1Record.getMeasurementValue();
+
+                if (((currentValue - prev1Value) > 10 && (prev1Value - prev2Value) > 10) || ((currentValue - prev1Value) < -10 && (prev1Value - prev2Value) < -10)) {
+                    triggerAlert = true;
+                }
+            }
+        return triggerAlert;
+    }
+
+    private boolean evaluateSaturation(PatientRecord record) {
+        boolean triggerAlert = false;
+
+            if(record.getMeasurementValue() < 92.0) {
+                triggerAlert = true;
+            }// in csv files saturation levels saved as strings
+        return triggerAlert;
+    }
+
+    private boolean evaluateHypotensiveHypoxemia(PatientRecord record) {
+        boolean triggerAlert = false;
+        List<PatientRecord> systolicRecords = new ArrayList<>();
+        List<PatientRecord> saturationRecords = new ArrayList<>();
+        if(record.getRecordType().equals("Saturation")) {
+            saturationRecords.add(record);
+            if(systolicRecords.size() >= 1) {
+                if(record.getMeasurementValue() < 92.0 && systolicRecords.get(systolicRecords.size() - 1).getMeasurementValue() < 90) {
+                    triggerAlert = true;
+                }
+            }
+        }
+
+        if(record.getRecordType().equals("SystolicPressure")) {
+            systolicRecords.add(record);
+            if(saturationRecords.size() >= 1) {
+                if (record.getMeasurementValue() < 90 && saturationRecords.get(saturationRecords.size() - 1).getMeasurementValue() < 92.0) {
+                    triggerAlert = true;
+                }
+            }
+        }
+        return triggerAlert;
     }
 
     /**
@@ -109,6 +178,6 @@ public class AlertGenerator {
      * @param alert the alert object containing details about the alert condition
      */
     private void triggerAlert(Alert alert) {
-        // Implementation might involve logging the alert or notifying staff
+        System.out.print(alert.getCondition());
     }
 }
