@@ -51,4 +51,34 @@ class DataStorageTest {
         assertEquals("WhiteBloodCells", record57.getRecordType());
         assertEquals(6.410270324029725, record57.getMeasurementValue());
     }
+
+
+    @Test
+    void testEmptyStorage() {
+        DataStorage storage = new DataStorage(new MockDataReader());
+
+        List<PatientRecord> records = storage.getRecords(1, 0L, Long.MAX_VALUE);
+        assertTrue(records.isEmpty());
+
+        records = storage.getRecords(999, 0L, Long.MAX_VALUE);
+        assertTrue(records.isEmpty());
+    }
+
+    @Test
+    void testDuplicateRecords() {
+        DataStorage storage = new DataStorage(new MockDataReader());
+
+        // duplicate records with different data
+        storage.addPatientData(3, 100.0, "ECG", 1714376789060L);
+        storage.addPatientData(3, 101.0, "ECG", 1714376789060L);
+
+        // expect them to be stored as different records
+        List<PatientRecord> records = storage.getRecords(3, 1714376789060L, 1714376789060L);
+        assertEquals(2, records.size());
+
+        // exact same record
+        storage.addPatientData(3, 100.0, "ECG", 1714376789060L);
+        records = storage.getRecords(3, 1714376789060L, 1714376789060L);
+        assertEquals(3, records.size());
+    }
 }
