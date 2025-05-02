@@ -34,7 +34,8 @@ class DataStorageTest {
     void testFileDataReader() throws IOException {
         FileDataReader reader = new FileDataReader("output");
         DataStorage storage = new DataStorage(reader);
-        reader.readData(storage);
+        reader.setDataStorage(storage);
+        reader.start();
 
         // testing of two randomly selected patients if they are loaded into storage from file
         List<PatientRecord> records50 = storage.getRecords(50, 1743857326972L, 1743857326972L);
