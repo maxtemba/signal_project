@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Implementation of DataReader that reads patient data from files in a specified directory.
+ * Implementation of DataReader {@link DataReader} that reads patient data from files in a specified directory.
  */
 public class FileDataReader implements DataReader {
     private String outputDirectory;
