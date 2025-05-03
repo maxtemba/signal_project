@@ -2,9 +2,10 @@ package com.data_management;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.alerts.AlertGenerator;
 
 /**
@@ -21,14 +22,12 @@ public class DataStorage {
      * structure.
      */
     public DataStorage(DataReader dataReader) {
-        this.patientMap = new HashMap<>();
+        this.patientMap = new ConcurrentHashMap<>(); // changed to handle same data
     }
 
     /**
      * Adds or updates patient data in the storage.
-     * If the patient does not exist, a new Patient object is created and added to
-     * the storage.
-     * Otherwise, the new data is added to the existing patient's records.
+     * Thread safe.
      *
      * @param patientId        the unique identifier of the patient
      * @param measurementValue the value of the health metric being recorded
@@ -38,13 +37,10 @@ public class DataStorage {
      *                         milliseconds since the Unix epoch
      */
     public void addPatientData(int patientId, double measurementValue, String recordType, long timestamp) {
-        Patient patient = patientMap.get(patientId);
-        if (patient == null) {
-            patient = new Patient(patientId);
-            patientMap.put(patientId, patient);
-        }
+        Patient patient = patientMap.computeIfAbsent(patientId, id -> new Patient(id));
         patient.addRecord(measurementValue, recordType, timestamp);
     }
+
 
     /**
      * Retrieves a list of PatientRecord objects for a specific patient, filtered by
