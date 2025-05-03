@@ -1,14 +1,14 @@
 package data_management;
 
 import com.alerts.AlertGenerator;
-import com.data_management.DataStorage;
-import com.data_management.FileDataReader;
-import com.data_management.MockDataReader;
-import com.data_management.WebSocketClientReader;
+import com.data_management.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 public class WebSocketClientTest {
 
     private DataStorage dataStorage;
@@ -26,6 +26,27 @@ public class WebSocketClientTest {
        reader.start();
        Thread.sleep(5000);
        reader.close();
+    }
+
+    @Test
+    public void testIntegrationWithStorageAndAlerts() throws Exception {
+        WebSocketClientReader reader = new WebSocketClientReader(new URI("ws://localhost:8080"), dataStorage);
+        reader.start();
+        Thread.sleep(5000);
+        reader.close();
+
+        AlertGenerator alertGenerator = new AlertGenerator(dataStorage);
+        for (Patient patient : dataStorage.getAllPatients()) {
+            alertGenerator.evaluateData(patient);
+        }
+
+        // todo checking
+    }
+
+    @Test
+    public void testHandlesNetworkError() {
+        Exception fakeException = new RuntimeException("no connection");
+        assertDoesNotThrow(() -> reader.onError(fakeException));
     }
 }
 
