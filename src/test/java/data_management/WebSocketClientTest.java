@@ -9,6 +9,10 @@ import java.net.URI;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+/**
+ * Requirements: web needs to be running for tests to work.
+ * Sample call: java -jar target/cardio_generator-1.0-SNAPSHOT.jar --patient-count 100 --output websocket:8080
+ */
 public class WebSocketClientTest {
 
     private DataStorage dataStorage;
