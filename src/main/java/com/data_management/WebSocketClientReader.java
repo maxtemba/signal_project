@@ -40,8 +40,37 @@ public class WebSocketClientReader extends WebSocketClient implements DataReader
      */
     @Override
     public void onMessage(String message) {
-        // for testing
-        System.out.println("data from web: " + message);
+        System.out.println("data: " + message);
+        try {
+            // error checking
+            if (dataStorage == null || message == null || !message.contains("PatientID:")) {
+                throw new IllegalArgumentException("data problem.");
+            }
+
+            String[] parts = message.split(", ");
+
+            int patientId = Integer.parseInt(parts[0].split(": ")[1]);
+            long timestamp = Long.parseLong(parts[1].split(": ")[1]);
+            String recordType = parts[2].split(": ")[1];
+            String valueStr = parts[3].split(": ")[1].trim();
+
+            double measurementValue;
+            String cleanedValue = valueStr.replace("%", "").toLowerCase();
+
+            // handles special cases, similar to {@Link FileDataReader}
+            if (cleanedValue.equals("triggered")) {
+                measurementValue = 1.0;
+            } else if (cleanedValue.equals("resolved")) {
+                measurementValue = 0.0;
+            } else {
+                measurementValue = Double.parseDouble(cleanedValue);
+            }
+
+            dataStorage.addPatientData(patientId, measurementValue, recordType, timestamp);
+        } catch (Exception e) {
+            System.err.println("general error: " + message);
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -83,4 +112,5 @@ public class WebSocketClientReader extends WebSocketClient implements DataReader
     public void setDataStorage(DataStorage dataStorage) {
         this.dataStorage = dataStorage;
     }
+
 }
