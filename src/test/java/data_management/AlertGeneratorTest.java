@@ -86,6 +86,7 @@ class AlertGeneratorTest {
 
         // todo (trigger)
         alertGenerator.evaluateData(patient6);
+        assert
     }
 
     @Test
