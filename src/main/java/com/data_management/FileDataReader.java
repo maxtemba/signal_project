@@ -8,23 +8,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Implementation of DataReader that reads patient data from files in a specified directory.
+ * Implementation of DataReader {@link DataReader} that reads patient data from files in a specified directory.
  */
 public class FileDataReader implements DataReader {
     private String outputDirectory;
+    private DataStorage dataStorage;
 
+    /**
+     * Constructs new filreader with a given input folder.
+     *
+     * @param outputDirectory the path to the folder where the data is stored
+     */
     public FileDataReader(String outputDirectory) {
         this.outputDirectory = outputDirectory;
     }
 
-    @Override
-    public void readData(DataStorage dataStorage) throws IOException {
-        List<File> dataFiles = getDataFiles();
-        for (File file : dataFiles) {
-            parseFile(file, dataStorage);
-        }
-    }
-
+    /**
+     * Gets all the files from the data folder and converts them to java file type.
+     *
+     * @return list of the files
+     */
     private List<File> getDataFiles() {
         List<File> files = new ArrayList<>();
         File directory = new File(outputDirectory);
@@ -42,6 +45,13 @@ public class FileDataReader implements DataReader {
         return files;
     }
 
+    /**
+     * Parses a file line by line to parseLine() function.
+     *
+     * @param file single file for parsing
+     * @param dataStorage the storage to parse to
+     * @throws IOException if reading fails
+     */
     private void parseFile(File file, DataStorage dataStorage) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
@@ -51,6 +61,12 @@ public class FileDataReader implements DataReader {
         }
     }
 
+    /**
+     * Direct access to the datastorage {@link DataStorage}. Converts each line to a valid form of input for the storage.
+     *
+     * @param line the information for each patient
+     * @param dataStorage link to the storage
+     */
     private void parseLine(String line, DataStorage dataStorage) {
         try {
             String[] parts = line.split(", ");
@@ -77,5 +93,28 @@ public class FileDataReader implements DataReader {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Starts the active reading process over every file in the directory.
+     *
+     * @throws IOException if any file cannot be read
+     */
+    @Override
+    public void start() throws IOException {
+        List<File> dataFiles = getDataFiles();
+        for (File file : dataFiles) {
+            parseFile(file, dataStorage);
+        }
+    }
+
+    /**
+     * Setter for the storage of patient data {@link DataStorage}
+     *
+     * @param dataStorage the storage where data will be stored
+     */
+    @Override
+    public void setDataStorage(DataStorage dataStorage) {
+        this.dataStorage = dataStorage;
     }
 }
