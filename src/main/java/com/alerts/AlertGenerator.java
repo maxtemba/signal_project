@@ -53,14 +53,24 @@ public class AlertGenerator {
             if (strategy != null) {
                 if (strategy.checkAlert(record)) {
                     AlertFactory factory = strategy.getAlertFactory();
-                    Alert alert = factory.createAlert(String.valueOf(record.getPatientId()), factory.getMessage(), record.getTimestamp());
-                    triggerAlert(alert);
+                    IAlert alert = factory.createAlert(String.valueOf(record.getPatientId()), factory.getMessage(), record.getTimestamp());
+                    RepeatedAlertDecorator repeatedAlert = new RepeatedAlertDecorator(alert, 5000, 3);
+                   if(repeatedAlert.repeatConditions(alert)) {
+                       repeatedAlert.startRepeating();
+                       triggerAlert(alert);
+                   }
+                   else {
+                       triggerAlert(alert);
+                   }
                 }
 
                 for(AlertStrategy combined : combinedStrategy) {
                     if(combined.checkAlert(record)) {
                        AlertFactory combinedFactory = combined.getAlertFactory();
-                       Alert combinedAlert = combinedFactory.createAlert(String.valueOf(record.getPatientId()), combinedFactory.getMessage(), record.getTimestamp());
+                       IAlert combinedAlert = combinedFactory.createAlert(String.valueOf(record.getPatientId()), combinedFactory.getMessage(), record.getTimestamp());
+                       if(combinedFactory instanceof HypotensiveHypoxemiaAlertFactory) {
+                           combinedAlert = new PriorityAlertDecorator(combinedAlert, "High");
+                       }
                        triggerAlert(combinedAlert);
                     }
                 }
@@ -203,7 +213,7 @@ public class AlertGenerator {
      *
      * @param alert the alert object containing details about the alert condition
      */
-    private void triggerAlert(Alert alert) {
+    private void triggerAlert(IAlert alert) {
         System.out.print(alert.getCondition());
     }
 }

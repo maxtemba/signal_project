@@ -29,6 +29,11 @@ public class RepeatedAlertDecorator extends AlertDecorator {
         }, 0, repeatInterval);
     }
 
+    public boolean repeatConditions(IAlert alert){
+        boolean repeat  = alert.getClass().equals(ECGAlert.class);
+        return repeat;
+    }
+
     public void repeatTriggerAlert() {
         System.out.println("Repeated(" + repeatCount + "): " + getCondition());
         repeatCount++;
