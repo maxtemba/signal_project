@@ -18,7 +18,7 @@ class DataStorageTest {
 
     @Test
     void testAddAndGetRecords() {
-        DataStorage storage = new DataStorage(new FileDataReader("output"));
+        DataStorage storage = DataStorage.getInstance();
 
         storage.addPatientData(1, 100.0, "WhiteBloodCells", 1714376789050L);
         storage.addPatientData(1, 200.0, "WhiteBloodCells", 1714376789051L);
@@ -33,7 +33,7 @@ class DataStorageTest {
     @Test
     void testFileDataReader() throws IOException {
         FileDataReader reader = new FileDataReader("output");
-        DataStorage storage = new DataStorage(reader);
+        DataStorage storage = DataStorage.getInstance();
         reader.setDataStorage(storage);
         reader.start();
 
@@ -56,7 +56,7 @@ class DataStorageTest {
 
     @Test
     void testEmptyStorage() {
-        DataStorage storage = new DataStorage(new MockDataReader());
+        DataStorage storage = DataStorage.getInstance();
 
         List<PatientRecord> records = storage.getRecords(1, 0L, Long.MAX_VALUE);
         assertTrue(records.isEmpty());
@@ -67,7 +67,7 @@ class DataStorageTest {
 
     @Test
     void testDuplicateRecords() {
-        DataStorage storage = new DataStorage(new MockDataReader());
+        DataStorage storage = DataStorage.getInstance();
 
         // duplicate records with different data
         storage.addPatientData(3, 100.0, "ECG", 1714376789060L);

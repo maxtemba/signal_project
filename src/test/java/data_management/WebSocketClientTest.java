@@ -21,7 +21,7 @@ public class WebSocketClientTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        dataStorage = new DataStorage(new MockDataReader());
+        DataStorage dataStorage = DataStorage.getInstance();
         reader = new WebSocketClientReader(new URI("ws://localhost:8080"), dataStorage);
     }
 
